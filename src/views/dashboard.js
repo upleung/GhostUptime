@@ -8,21 +8,12 @@ export function getHtmlDashboard() {
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
-  <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdgeKeep - 智能站点保活控制台</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
   <div class="max-w-6xl mx-auto px-4 py-8">
     <!-- Header -->
     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
       <div class="flex items-center gap-3">
         <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse"></div>
-        <h1 class="text-xl font-bold tracking-tight">EdgeKeep 智能保活面板</h1>
+        <h1 class="text-xl font-bold tracking-tight">GhostUptime 智能保活面板</h1>
       </div>
       <div class="flex gap-2">
         <button onclick="openUAModal()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded border border-slate-700">UA 池生成器</button>
@@ -171,14 +162,8 @@ export function getHtmlDashboard() {
     function closeUAModal() { document.getElementById('uaModal').classList.add('hidden'); }
 
     loadSites();
-    setInterval(loadSites, 30000); // 30秒自动轮询刷新一次页面状态
+    setInterval(loadSites, 30000); 
   </script>
-</body>
-</html>
-  <div class="max-w-6xl mx-auto px-4 py-8">
-     <h1 class="text-xl font-bold">GhostUptime 控制台运行中...</h1>
-     <p class="text-slate-400 mt-2">请参考上一模块中的完整 HTML 代码粘贴至此处。</p>
-  </div>
 </body>
 </html>`;
 }
