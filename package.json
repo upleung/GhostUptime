@@ -1,0 +1,13 @@
+{
+  "name": "ghost-uptime",
+  "version": "1.0.0",
+  "description": "A stealthy serverless uptime monitor",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

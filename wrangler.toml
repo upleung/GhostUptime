@@ -1,0 +1,12 @@
+name = "ghost-uptime"
+main = "src/index.js"
+compatibility_date = "2026-09-08"
+
+[triggers]
+crons = ["* * * * *"] # 每分钟执行
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ghost-uptime-db"
+# 把上一步命令行生成的 database_id 填在下方
+database_id = "17b516a1-0b9b-4f25-96cc-03d9974dc9e4"
