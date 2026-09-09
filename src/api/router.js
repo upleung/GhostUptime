@@ -10,20 +10,37 @@ export async function handleApiRequest(req, env, ctx) {
     return Response.json(results);
   }
 
+  if (url.pathname === "/api/logs" && req.method === "GET") {
+    const id = url.searchParams.get("site_id");
+    const { results } = await env.DB.prepare("SELECT * FROM logs WHERE site_id = ? ORDER BY id DESC LIMIT 50").bind(id).all();
+    return Response.json(results.reverse()); // 供前端绘制时序图
+  }
+
   if (url.pathname === "/api/sites" && req.method === "POST") {
     const body = await req.json();
     const baseMins = parseInt(body.base_interval_minutes, 10);
     const windowMins = parseInt(body.random_window_minutes || 0, 10);
-    await env.DB.prepare(`
-      INSERT INTO sites (name, url, base_interval_minutes, random_window_minutes, next_run_at)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(body.name, body.url, baseMins, windowMins, Date.now()).run();
+    const notifyJson = JSON.stringify(body.notify || {});
+
+    if (body.id) {
+      // 执行 Edit 修改功能
+      await env.DB.prepare(`
+        UPDATE sites SET name=?, url=?, base_interval_minutes=?, random_window_minutes=?, custom_ua=?, notify_configs=? WHERE id=?
+      `).bind(body.name, body.url, baseMins, windowMins, body.custom_ua, notifyJson, body.id).run();
+    } else {
+      // 执行新增功能
+      await env.DB.prepare(`
+        INSERT INTO sites (name, url, base_interval_minutes, random_window_minutes, custom_ua, notify_configs, next_run_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(body.name, body.url, baseMins, windowMins, body.custom_ua, notifyJson, Date.now()).run();
+    }
     return Response.json({ success: true });
   }
 
   if (url.pathname === "/api/sites" && req.method === "DELETE") {
     const id = url.searchParams.get("id");
     await env.DB.prepare("DELETE FROM sites WHERE id = ?").bind(id).run();
+    await env.DB.prepare("DELETE FROM logs WHERE site_id = ?").bind(id).run();
     return Response.json({ success: true });
   }
 
@@ -42,7 +59,5 @@ export async function handleApiRequest(req, env, ctx) {
     return Response.json(generateUAPool(count));
   }
 
-  return new Response(getHtmlDashboard(), {
-    headers: { "Content-Type": "text/html; charset=utf-8" }
-  });
+  return new Response(getHtmlDashboard(), { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

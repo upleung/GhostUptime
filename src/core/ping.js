@@ -1,12 +1,17 @@
 import { generateUAPool, getRandomDelay } from './ua.js';
+import { sendNotification } from './notify.js';
 
 export async function pingSite(site, env) {
-  // 随机错峰 0~15秒
   const delayMs = getRandomDelay(0, 15000); 
   await new Promise(r => setTimeout(r, delayMs));
 
-  const uas = generateUAPool(10);
-  const ua = uas[Math.floor(Math.random() * uas.length)];
+  // 核心逻辑：优先使用用户自定义的固定请求头 UA，否则从引擎抽取
+  let ua = site.custom_ua;
+  if (!ua || ua.trim() === '') {
+    const uas = generateUAPool(10);
+    ua = uas[Math.floor(Math.random() * uas.length)];
+  }
+
   const startTime = Date.now();
   let statusCode = 0;
 
@@ -17,8 +22,7 @@ export async function pingSite(site, env) {
         "User-Agent": ua,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
-        "Cache-Control": "max-age=0",
-        "Upgrade-Insecure-Requests": "1"
+        "Cache-Control": "max-age=0"
       }
     });
     statusCode = res.status;
@@ -32,6 +36,16 @@ export async function pingSite(site, env) {
   const baseMs = site.base_interval_minutes * 60 * 1000;
   const jitterMs = getRandomDelay(0, site.random_window_minutes * 60 * 1000);
   const nextRunAt = now + baseMs - jitterMs;
+
+  // 状态变更检测与告警拦截
+  const previousStatus = site.last_status || 0;
+  const isNowDown = statusCode >= 400 || statusCode === 0;
+  const wasDown = previousStatus >= 400 || previousStatus === 0;
+
+  if (previousStatus !== 0) { // 忽略首次加载
+    if (!wasDown && isNowDown) await sendNotification(site, statusCode, 'DOWN');
+    if (wasDown && !isNowDown) await sendNotification(site, statusCode, 'UP');
+  }
 
   await env.DB.batch([
     env.DB.prepare(`
